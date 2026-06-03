@@ -27,6 +27,8 @@ public class Order {
 
     private Double amount;
 
+    private Integer quantity = 1;
+
     private String address;
 
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -46,6 +48,7 @@ public class Order {
     public OrderType getType() { return type; }
     public OrderStatus getStatus() { return status; }
     public Double getAmount() { return amount; }
+    public Integer getQuantity() { return quantity; }
     public String getAddress() { return address; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
@@ -56,6 +59,7 @@ public class Order {
     public void setType(OrderType type) { this.type = type; }
     public void setStatus(OrderStatus status) { this.status = status; }
     public void setAmount(Double amount) { this.amount = amount; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
     public void setAddress(String address) { this.address = address; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

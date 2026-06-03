@@ -23,10 +23,11 @@ public class OrderController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam Long bookId,
             @RequestParam String type,
-            @RequestParam String address) {
+            @RequestParam String address,
+            @RequestParam(defaultValue = "1") Integer quantity) {
         try {
             Order order = orderService.placeOrder(
-                    userDetails.getUsername(), bookId, type, address);
+                    userDetails.getUsername(), bookId, type, address, quantity);
             return ResponseEntity.ok(order);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

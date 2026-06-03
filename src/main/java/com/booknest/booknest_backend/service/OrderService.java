@@ -27,7 +27,7 @@ public class OrderService {
 
     // Place order
     public Order placeOrder(String email, Long bookId,
-                            String type, String address) {
+                            String type, String address, Integer quantity) {
 
         User buyer = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
@@ -45,6 +45,12 @@ public class OrderService {
             throw new RuntimeException("Book is not available!");
         }
 
+        int requestedQuantity = Math.max(1, quantity == null ? 1 : quantity);
+        int availableQuantity = book.getQuantity() == null ? 0 : book.getQuantity();
+        if (availableQuantity < requestedQuantity) {
+            throw new RuntimeException("Only " + availableQuantity + " copies available!");
+        }
+
         Order order = new Order();
         order.setBuyer(buyer);
         order.setBook(book);
@@ -52,16 +58,20 @@ public class OrderService {
         String orderType = type.equalsIgnoreCase("SELL") ? "BUY" : type.toUpperCase();
         order.setType(Order.OrderType.valueOf(orderType));
         order.setAddress(address);
-        order.setAmount(book.getPrice());
+        order.setQuantity(requestedQuantity);
+        double unitPrice = type.equalsIgnoreCase("RENT") && book.getRentPrice() != null
+                ? book.getRentPrice()
+                : (book.getPrice() == null ? 0 : book.getPrice());
+        order.setAmount(unitPrice * requestedQuantity);
 
         // Update book status
         // Reduce quantity
-        int newQuantity = book.getQuantity() - 1;
+        int newQuantity = availableQuantity - requestedQuantity;
         book.setQuantity(newQuantity);
 
 // If quantity is 0 update status
         if (newQuantity <= 0) {
-            if (type.equalsIgnoreCase("BUY")) {
+            if (type.equalsIgnoreCase("SELL") || orderType.equals("BUY")) {
                 book.setStatus(Book.BookStatus.SOLD);
             } else if (type.equalsIgnoreCase("RENT")) {
                 book.setStatus(Book.BookStatus.RENTED);
@@ -72,7 +82,7 @@ public class OrderService {
 
         bookRepository.save(book);
         // Award points to buyer
-        gamificationService.addPoints(email, 10, "Placed an order!");
+        gamificationService.addPoints(email, 10 * requestedQuantity, "Placed an order!");
         return orderRepository.save(order);
     }
 
@@ -130,7 +140,11 @@ public class OrderService {
         order.setStatus(Order.OrderStatus.CANCELLED);
 
         // Make book available again
-        order.getBook().setStatus(Book.BookStatus.AVAILABLE);
+        Book book = order.getBook();
+        int restoredQuantity = (book.getQuantity() == null ? 0 : book.getQuantity())
+                + Math.max(1, order.getQuantity() == null ? 1 : order.getQuantity());
+        book.setQuantity(restoredQuantity);
+        book.setStatus(Book.BookStatus.AVAILABLE);
         bookRepository.save(order.getBook());
 
         return orderRepository.save(order);
