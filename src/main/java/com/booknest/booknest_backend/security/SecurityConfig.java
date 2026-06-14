@@ -133,11 +133,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/clubs/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/gamification/leaderboard").permitAll()
+                                          .requestMatchers("/scheduler-status").permitAll()
                         .requestMatchers("/api/payment/**").authenticated()
 
                         .requestMatchers("/api/admin/**").authenticated()
                         .requestMatchers("/api/home/**").permitAll()
                         .requestMatchers("/api/contact/**").permitAll()
+            
                         .anyRequest().authenticated()
                 )
 
